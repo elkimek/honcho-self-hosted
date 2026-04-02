@@ -254,6 +254,93 @@ Setup: `http://localhost:8001/v1` with model name `THUDM/GLM-4.7-Flash`
 - **Same model for all tiers** — locally you'll typically run one model. The script sets it for all components. You can differentiate later in `config.toml` if you serve multiple models.
 - **No backup provider** — local mode uses a single server. If it goes down, Honcho's deriver queues work until it's back.
 
+## MCP Server (optional)
+
+Honcho includes an MCP server that exposes memory tools (search, chat, observations, peer cards) to any MCP-compatible client like Claude Code or Claude Desktop.
+
+The hosted version at `mcp.honcho.dev` points at Plastic Labs' cloud. For self-hosted, run the MCP server locally and point it at your Honcho instance.
+
+### Setup
+
+Requires Node.js 22+ and Bun on the server:
+
+```bash
+cd ~/honcho/mcp
+
+# Patch to use local Honcho instead of honcho.dev
+sed -i 's|https://api.honcho.dev|http://localhost:8000|' src/config.ts
+
+bun install
+```
+
+### Run as a service
+
+Create `/etc/systemd/system/honcho-mcp.service`:
+
+```ini
+[Unit]
+Description=Honcho MCP Server
+After=network.target docker.service
+
+[Service]
+Type=simple
+User=your-username
+WorkingDirectory=/home/your-username/honcho/mcp
+ExecStart=/usr/bin/npx wrangler dev --port 8787 --ip 0.0.0.0
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now honcho-mcp
+```
+
+### Connect Claude Code
+
+If the MCP server is on a remote machine, tunnel the port over SSH:
+
+```bash
+ssh -f -N -L 8787:localhost:8787 user@your-server
+```
+
+Then add to Claude Code:
+
+```bash
+claude mcp add --transport http honcho http://localhost:8787 \
+  --header "Authorization: Bearer local" \
+  --header "X-Honcho-User-Name: your-name" \
+  --header "X-Honcho-Workspace-ID: hermes"
+```
+
+### Connect Claude Desktop
+
+Add to your Claude Desktop config (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "honcho": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://localhost:8787",
+        "--header", "Authorization:${AUTH_HEADER}",
+        "--header", "X-Honcho-User-Name:${USER_NAME}"
+      ],
+      "env": {
+        "AUTH_HEADER": "Bearer local",
+        "USER_NAME": "your-name"
+      }
+    }
+  }
+}
+```
+
 ## Maintenance
 
 **Update Honcho:**
