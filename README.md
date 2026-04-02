@@ -88,6 +88,8 @@ Replace the placeholder values with your actual keys:
 - `LLM_OPENAI_COMPATIBLE_API_KEY` — your Venice key (backup LLM + embeddings)
 - `LLM_OPENAI_API_KEY` — your OpenRouter key again (needed for client init)
 
+Any OpenAI-compatible provider works — just swap the URL and key. See [Using different providers](#using-different-providers) for details.
+
 ### 4. Start Honcho
 
 ```bash
