@@ -8,7 +8,7 @@ Self-host [Honcho](https://github.com/plastic-labs/honcho) (Plastic Labs' memory
 
 Hermes Agent has a 4-layer memory system. The cross-session memory layer is powered by [Honcho](https://github.com/plastic-labs/honcho), which builds a deepening model of the user across conversations — extracting observations, recalling context, and consolidating memories over time.
 
-By default, Hermes uses Plastic Labs' managed cloud ([honcho.dev](https://honcho.dev)) + their [Neuromancer](https://blog.plasticlabs.ai/research/Introducing-Neuromancer-XR) models. This works out of the box but means your conversation data and user profile live on their servers.
+By default, Hermes uses Plastic Labs' managed cloud ([honcho.dev](https://honcho.dev)) + their [Neuromancer](https://plasticlabs.ai/neuromancer) models. This works out of the box but means your conversation data and user profile live on their servers.
 
 ### What are Neuromancer models?
 
@@ -295,9 +295,11 @@ docker compose exec database pg_dump -U honcho honcho > backup.sql
 | `honcho-config.json` | Hermes-side config — tells Hermes to use localhost:8000 |
 | `setup.sh` | One-command installer — handles everything |
 
+## License
+
+GPL-3.0
+
 ## Credits
 
 - [Honcho](https://github.com/plastic-labs/honcho) by Plastic Labs
 - [Hermes Agent](https://github.com/NousResearch/hermes-agent) by Nous Research
-- [Venice AI](https://venice.ai) for private inference
-- [OpenRouter](https://openrouter.ai) for multi-provider routing
