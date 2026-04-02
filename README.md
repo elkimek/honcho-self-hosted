@@ -41,16 +41,16 @@ Hermes Agent ──► localhost:8000 (self-hosted Honcho API)
                       │
                       └── Deriver/Dialectic/Dream workers
                               │
-                              ├── Primary: OpenRouter (200+ provider fallbacks)
-                              └── Backup:  Venice AI (if OpenRouter is down)
+                              ├── Primary LLM provider (any OpenAI-compatible API)
+                              └── Backup LLM provider (optional)
 ```
 
 ## Prerequisites
 
 - Ubuntu 22.04+ VM (tested on 22.04, 6GB RAM, 80GB disk)
 - Docker Engine + Compose plugin
-- OpenRouter API key ([openrouter.ai](https://openrouter.ai))
-- Venice AI API key ([venice.ai](https://venice.ai)) — optional backup + embeddings
+- API key from any OpenAI-compatible provider ([openrouter.ai](https://openrouter.ai), [venice.ai](https://venice.ai), [together.ai](https://together.ai), etc.)
+- Second API key for backup (optional)
 
 ## Quick Start
 
@@ -223,9 +223,9 @@ docker compose exec database pg_dump -U honcho honcho > backup.sql
 
 ## Known Limitations
 
-- **Embeddings go through Venice** — Honcho's "openrouter" embedding client shares `OPENAI_COMPATIBLE_*` config with the "custom" LLM client. Can't separate them without code changes. Venice embedding cost is negligible.
-- **One backup per component** — Honcho supports primary + one backup provider, not a full failover chain. Using OpenRouter as primary mitigates this since OpenRouter has its own multi-provider routing.
-- **No E2EE** — Honcho's agents use function calling, which Venice E2EE doesn't support. LLM request content is visible to the provider, but your stored data (sessions, observations, embeddings) stays on your VM.
+- **Embeddings share backup provider config** — Honcho's embedding client shares `OPENAI_COMPATIBLE_*` config with the backup LLM provider. If you configure a backup, embeddings route through it too. Embedding cost is negligible.
+- **One backup per component** — Honcho supports primary + one backup provider, not a full failover chain. Using a multi-provider router (e.g. OpenRouter) as primary mitigates this.
+- **No E2EE** — Honcho's agents use function calling, which isn't compatible with end-to-end encryption. LLM request content is visible to the provider, but your stored data (sessions, observations, embeddings) stays on your VM.
 
 ## Files
 

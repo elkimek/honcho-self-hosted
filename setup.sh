@@ -71,31 +71,42 @@ else
     echo "[4/5] Setting up API keys..."
     echo ""
 
-    OPENROUTER_KEY=""
-    while [ -z "$OPENROUTER_KEY" ]; do
-        read -rp "  OpenRouter API key (required): " OPENROUTER_KEY
-        if [ -z "$OPENROUTER_KEY" ]; then
-            echo "  OpenRouter key is required — get one at https://openrouter.ai"
+    PRIMARY_KEY=""
+    while [ -z "$PRIMARY_KEY" ]; do
+        read -rp "  Primary LLM API key (required): " PRIMARY_KEY
+        if [ -z "$PRIMARY_KEY" ]; then
+            echo "  An API key is required (e.g. from openrouter.ai, venice.ai, together.ai)"
         fi
     done
 
-    read -rp "  Venice AI API key (optional, press Enter to skip): " VENICE_KEY
+    read -rp "  Primary API base URL [https://openrouter.ai/api/v1]: " PRIMARY_URL
+    PRIMARY_URL="${PRIMARY_URL:-https://openrouter.ai/api/v1}"
+
+    read -rp "  Backup LLM API key (optional, press Enter to skip): " BACKUP_KEY
 
     {
-        echo "# OpenRouter — primary LLM provider"
-        echo "LLM_VLLM_API_KEY=${OPENROUTER_KEY}"
-        echo "LLM_VLLM_BASE_URL=https://openrouter.ai/api/v1"
+        echo "# Primary LLM provider"
+        echo "LLM_VLLM_API_KEY=${PRIMARY_KEY}"
+        echo "LLM_VLLM_BASE_URL=${PRIMARY_URL}"
         echo ""
         echo "# Needed for client initialization"
-        echo "LLM_OPENAI_API_KEY=${OPENROUTER_KEY}"
+        echo "LLM_OPENAI_API_KEY=${PRIMARY_KEY}"
     } > "$INSTALL_DIR/.env"
 
-    if [ -n "$VENICE_KEY" ]; then
+    if [ -n "$BACKUP_KEY" ]; then
+        read -rp "  Backup API base URL [https://api.venice.ai/api/v1]: " BACKUP_URL
+        BACKUP_URL="${BACKUP_URL:-https://api.venice.ai/api/v1}"
         {
             echo ""
-            echo "# Venice — backup LLM provider + embeddings"
-            echo "LLM_OPENAI_COMPATIBLE_API_KEY=${VENICE_KEY}"
+            echo "# Backup LLM provider + embeddings"
+            echo "LLM_OPENAI_COMPATIBLE_API_KEY=${BACKUP_KEY}"
         } >> "$INSTALL_DIR/.env"
+        # Update config.toml with backup URL
+        sed -i "s|OPENAI_COMPATIBLE_BASE_URL = .*|OPENAI_COMPATIBLE_BASE_URL = \"${BACKUP_URL}\"|" "$INSTALL_DIR/config.toml"
+    else
+        # No backup — remove backup provider references from config
+        sed -i '/^BACKUP_PROVIDER/d; /^BACKUP_MODEL/d' "$INSTALL_DIR/config.toml"
+        sed -i '/^OPENAI_COMPATIBLE_BASE_URL/d' "$INSTALL_DIR/config.toml"
     fi
 
     echo "  Keys saved to $INSTALL_DIR/.env"

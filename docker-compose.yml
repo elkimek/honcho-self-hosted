@@ -1,9 +1,9 @@
 # Honcho self-hosted deployment for VM
-# Primary LLM: OpenRouter (via "vllm" slot), Backup: Venice (via "custom" slot)
+# Primary LLM via "vllm" slot, optional backup via "custom" slot
 #
 # Usage:
-#   docker-compose up -d
-#   docker-compose logs -f api deriver
+#   docker compose up -d
+#   docker compose logs -f api deriver
 #
 # First run will build the image and run migrations automatically.
 
