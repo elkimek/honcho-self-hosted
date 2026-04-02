@@ -1,4 +1,4 @@
-# Honcho self-hosted deployment for VM
+# Honcho self-hosted deployment
 # Primary LLM via "vllm" slot, optional backup via "custom" slot
 #
 # Usage:

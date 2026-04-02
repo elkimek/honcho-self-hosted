@@ -1,6 +1,6 @@
 # Self-Hosted Honcho for Hermes Agent
 
-Self-host [Honcho](https://github.com/plastic-labs/honcho) (Plastic Labs' memory layer) on your own VM instead of using their cloud. Works with [Hermes Agent](https://github.com/NousResearch/hermes-agent) out of the box.
+Self-host [Honcho](https://github.com/plastic-labs/honcho) (Plastic Labs' memory layer) on your own server instead of using their cloud. Works with [Hermes Agent](https://github.com/NousResearch/hermes-agent) out of the box.
 
 **No fork required** — just 3 config files on top of upstream Honcho.
 
@@ -23,20 +23,20 @@ It scores 86.9% on the LoCoMo memory benchmark vs. 69.6% for base Qwen3-8B and 8
 | Option | Privacy | Data location | LLM for memory | Setup | Cost |
 |--------|---------|--------------|----------------|-------|------|
 | **Managed cloud** (default) | Low — data + inference on 3rd party | Plastic Labs servers | Neuromancer (Plastic Labs) | None — built into Hermes | Free tier / paid |
-| **Self-hosted + API** (this repo) | Medium — data on your VM, inference via API | Your VM | Any OpenAI-compatible API | ~3 minutes | API usage only |
+| **Self-hosted + API** (this repo) | Medium — data on your machine, inference via API | Your VM | Any OpenAI-compatible API | ~3 minutes | API usage only |
 | **Self-hosted + local model** | High — nothing leaves your network | Your VM | Local LLM (Ollama, vLLM) | More setup | Hardware only |
 
 **Managed cloud** — Zero setup. Best for getting started. Your data is on Plastic Labs' infrastructure.
 
-**Self-hosted + API** — This repo. Your data stays on your VM. LLM calls go to a cloud API for inference only — the provider sees request content but doesn't store your memory data. Best balance of privacy and capability.
+**Self-hosted + API** — This repo. Your data stays on your machine. LLM calls go to a cloud API for inference only — the provider sees request content but doesn't store your memory data. Best balance of privacy and capability.
 
 **Self-hosted + local model** — Maximum privacy. No data leaves your network. Requires a GPU or capable CPU on your LAN running an inference server (Ollama, vLLM, llama.cpp). Set `LLM_VLLM_BASE_URL` to your local server. Trade-off: smaller models may produce lower quality observations and reasoning than cloud APIs.
 
 ## What this does
 
-- Runs Honcho's full memory stack (API, Deriver, PostgreSQL, Redis) on your VM
+- Runs Honcho's full memory stack (API, Deriver, PostgreSQL, Redis) on your machine
 - Routes LLM calls through any OpenAI-compatible provider (primary + backup)
-- All your data stays on your VM — no third-party cloud storage
+- All your data stays on your machine — no third-party cloud storage
 - Works with OpenRouter, Venice, Routstr, Together, Ollama, or any other provider
 
 ## Architecture
@@ -44,8 +44,8 @@ It scores 86.9% on the LoCoMo memory benchmark vs. 69.6% for base Qwen3-8B and 8
 ```
 Hermes Agent ──► localhost:8000 (self-hosted Honcho API)
                       │
-                      ├── PostgreSQL + pgvector (your VM)
-                      ├── Redis cache (your VM)
+                      ├── PostgreSQL + pgvector (your machine)
+                      ├── Redis cache (your machine)
                       │
                       └── Deriver/Dialectic/Dream workers
                               │
@@ -55,7 +55,7 @@ Hermes Agent ──► localhost:8000 (self-hosted Honcho API)
 
 ## Prerequisites
 
-- Ubuntu 22.04+ VM (tested on 22.04, 6GB RAM, 80GB disk)
+- Ubuntu 22.04+ (VM, VPS, bare metal, or any Linux server — tested on 22.04, 6GB RAM, 80GB disk)
 - Docker Engine + Compose plugin
 - API key from any OpenAI-compatible provider ([openrouter.ai](https://openrouter.ai), [venice.ai](https://venice.ai), [together.ai](https://together.ai), etc.)
 - Second API key for backup (optional)
@@ -274,7 +274,7 @@ docker compose exec database pg_dump -U honcho honcho > backup.sql
 
 - **Embeddings share backup provider config** — Honcho's embedding client shares `OPENAI_COMPATIBLE_*` config with the backup LLM provider. If you configure a backup, embeddings route through it too. Embedding cost is negligible.
 - **One backup per component** — Honcho supports primary + one backup provider, not a full failover chain. Using a multi-provider router (e.g. OpenRouter) as primary mitigates this.
-- **No E2EE** — Honcho's agents use function calling, which isn't compatible with end-to-end encryption. LLM request content is visible to the provider, but your stored data (sessions, observations, embeddings) stays on your VM.
+- **No E2EE** — Honcho's agents use function calling, which isn't compatible with end-to-end encryption. LLM request content is visible to the provider, but your stored data (sessions, observations, embeddings) stays on your machine.
 
 ## Files
 
