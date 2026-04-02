@@ -150,18 +150,18 @@ Honcho has 4 background components that use LLM calls:
 - **Summary** — Compresses long sessions into short/long summaries to keep context manageable.
 - **Dream** — Runs every ~8 hours. Merges redundant observations, deletes outdated ones, infers higher-level patterns. Memory consolidation.
 
-LLM calls are tiered by task complexity. Default models (change in `config.toml`):
+LLM calls are tiered by task complexity. Use lighter models for frequent tasks and heavier ones for rare, complex tasks. Example defaults shipped in `config.toml`:
 
-| Component | Model | When it runs |
-|-----------|-------|-------------|
-| **Deriver** | `qwen/qwen3-5-35b-a3b` (light) | Every message |
-| **Summary** | `qwen/qwen3-5-35b-a3b` (light) | Every 20/60 messages |
-| **Dialectic** (low) | `qwen/qwen3-5-35b-a3b` (light) | Per Hermes turn |
-| **Dialectic** (med/high) | `qwen/qwen3-5-122b-a10b` (medium) | Complex queries |
-| **Dialectic** (max) | `deepseek/deepseek-chat-v3-0324` (heavy) | Hardest queries |
-| **Dream** | `deepseek/deepseek-chat-v3-0324` (heavy) | Every ~8 hours |
+| Component | Example model | Tier | When it runs |
+|-----------|--------------|------|-------------|
+| **Deriver** | `qwen/qwen3-5-35b-a3b` | Light — runs often, needs speed | Every message |
+| **Summary** | `qwen/qwen3-5-35b-a3b` | Light | Every 20/60 messages |
+| **Dialectic** (low) | `qwen/qwen3-5-35b-a3b` | Light | Per Hermes turn |
+| **Dialectic** (med/high) | `qwen/qwen3-5-122b-a10b` | Medium | Complex queries |
+| **Dialectic** (max) | `deepseek/deepseek-chat-v3-0324` | Heavy — best reasoning | Hardest queries |
+| **Dream** | `deepseek/deepseek-chat-v3-0324` | Heavy | Every ~8 hours |
 
-Each component has a primary and backup provider. If the primary fails on the last retry, the backup fires automatically.
+Any model your provider supports will work — just change the model name in `config.toml`. Each component also has a backup provider that fires automatically if the primary fails on the last retry.
 
 To change models, edit `~/honcho/config.toml` and rebuild:
 
