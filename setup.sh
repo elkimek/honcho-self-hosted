@@ -132,12 +132,15 @@ else
         if [ -n "$EMBED_KEY" ]; then
             read -rp "  Embedding API base URL [https://openrouter.ai/api/v1]: " EMBED_URL
             EMBED_URL="${EMBED_URL:-https://openrouter.ai/api/v1}"
+            read -rp "  Embedding model name [openai/text-embedding-3-small]: " EMBED_MODEL
+            EMBED_MODEL="${EMBED_MODEL:-openai/text-embedding-3-small}"
             {
                 echo ""
                 echo "# Embeddings via cloud API (local server can't serve embedding models)"
                 echo "LLM_EMBEDDING_API_KEY=${EMBED_KEY}"
+                echo "LLM_EMBEDDING_BASE_URL=${EMBED_URL}"
+                echo "LLM_EMBEDDING_MODEL=${EMBED_MODEL}"
             } >> "$INSTALL_DIR/.env"
-            sed -i "s|EMBEDDING_BASE_URL = .*|EMBEDDING_BASE_URL = \"${EMBED_URL}\"|" "$INSTALL_DIR/config.toml"
             # OPENAI_COMPATIBLE still needed for client init
             {
                 echo "LLM_OPENAI_COMPATIBLE_API_KEY=${LOCAL_KEY}"
@@ -147,7 +150,6 @@ else
             # Disable embeddings entirely
             sed -i 's|EMBED_MESSAGES = true|EMBED_MESSAGES = false|' "$INSTALL_DIR/config.toml"
             sed -i "s|OPENAI_COMPATIBLE_BASE_URL = .*|OPENAI_COMPATIBLE_BASE_URL = \"${LOCAL_URL}\"|" "$INSTALL_DIR/config.toml"
-            sed -i "s|EMBEDDING_BASE_URL = .*|EMBEDDING_BASE_URL = \"${LOCAL_URL}\"|" "$INSTALL_DIR/config.toml"
             {
                 echo ""
                 echo "LLM_OPENAI_COMPATIBLE_API_KEY=${LOCAL_KEY}"
@@ -198,13 +200,14 @@ else
             echo "LLM_OPENAI_API_KEY=${PRIMARY_KEY}"
         } > "$INSTALL_DIR/.env"
 
-        # Embeddings always route through primary provider (backup may not support embedding models)
+        # Embeddings via primary provider (backup may not support embedding models)
         {
             echo ""
             echo "# Embeddings via primary provider"
             echo "LLM_EMBEDDING_API_KEY=${PRIMARY_KEY}"
+            echo "LLM_EMBEDDING_BASE_URL=${PRIMARY_URL}"
+            echo "LLM_EMBEDDING_MODEL=openai/text-embedding-3-small"
         } >> "$INSTALL_DIR/.env"
-        sed -i "s|EMBEDDING_BASE_URL = .*|EMBEDDING_BASE_URL = \"${PRIMARY_URL}\"|" "$INSTALL_DIR/config.toml"
 
         if [ -n "$BACKUP_KEY" ]; then
             read -rp "  Backup API base URL [https://api.venice.ai/api/v1]: " BACKUP_URL

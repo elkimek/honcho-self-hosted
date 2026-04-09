@@ -114,12 +114,17 @@ nano ~/honcho/.env
 Replace the placeholder values with your actual API keys:
 - `LLM_VLLM_API_KEY` — primary LLM provider
 - `LLM_VLLM_BASE_URL` — primary provider's API URL
-- `LLM_OPENAI_COMPATIBLE_API_KEY` — backup LLM provider (also used for embeddings)
+- `LLM_EMBEDDING_API_KEY` — embedding provider (can be same as primary)
+- `LLM_EMBEDDING_BASE_URL` — embedding provider's API URL
+- `LLM_EMBEDDING_MODEL` — embedding model name (default: `openai/text-embedding-3-small`)
+- `LLM_OPENAI_COMPATIBLE_API_KEY` — backup LLM provider (optional)
 - `LLM_OPENAI_API_KEY` — same as your primary key (needed for client init)
 
 Any OpenAI-compatible provider works (OpenRouter, Venice, Routstr, Together, etc.) — just set the key and URL. See [Using different providers](#using-different-providers) for details.
 
-**If you don't want a backup provider:** remove all `BACKUP_PROVIDER` and `BACKUP_MODEL` lines from `config.toml`, and set `LLM_OPENAI_COMPATIBLE_API_KEY` + `OPENAI_COMPATIBLE_BASE_URL` to the same values as your primary (needed for embeddings). The setup script handles this automatically.
+**Embedding fallback:** if `LLM_EMBEDDING_API_KEY` or `LLM_EMBEDDING_BASE_URL` is left empty, Honcho falls back to the backup provider credentials (`LLM_OPENAI_COMPATIBLE_*`). This is useful if your backup provider (e.g. Venice) supports embeddings at negligible cost.
+
+**If you don't want a backup provider:** remove all `BACKUP_PROVIDER` and `BACKUP_MODEL` lines from `config.toml`, and set `LLM_OPENAI_COMPATIBLE_API_KEY` + `OPENAI_COMPATIBLE_BASE_URL` to the same values as your primary. The setup script handles this automatically.
 
 ### 4. Start Honcho
 
@@ -250,7 +255,7 @@ Setup: `http://localhost:8001/v1` with model name `THUDM/GLM-4.7-Flash`
 ### Considerations
 
 - **Model size matters** — Honcho's agents need reliable function calling and structured JSON. Models under 14B may miss tool calls or malform output. 32B+ recommended.
-- **Embeddings need a cloud API** — Honcho uses `openai/text-embedding-3-small` for vector embeddings, which local servers can't serve. The setup script asks for a separate cloud API key for embeddings (e.g. a free OpenRouter key), or lets you disable embeddings entirely (Honcho works but without vector search).
+- **Embeddings need a cloud API** — local servers typically can't serve embedding models. The setup script asks for a separate cloud API key, URL, and model name for embeddings (e.g. OpenRouter with `openai/text-embedding-3-small`, or Venice with `text-embedding-bge-m3`), or lets you disable embeddings entirely (Honcho works but without vector search).
 - **Same model for all tiers** — locally you'll typically run one model. The script sets it for all components. You can differentiate later in `config.toml` if you serve multiple models.
 - **No backup provider** — local mode uses a single server. If it goes down, Honcho's deriver queues work until it's back.
 
@@ -379,7 +384,7 @@ docker compose exec database pg_dump -U honcho honcho > backup.sql
 
 ## Known Limitations
 
-- **Embeddings share backup provider config** — Honcho's embedding client shares `OPENAI_COMPATIBLE_*` config with the backup LLM provider. If you configure a backup, embeddings route through it too. Embedding cost is negligible.
+- **Embedding fallback shares backup config** — if `LLM_EMBEDDING_API_KEY` / `LLM_EMBEDDING_BASE_URL` are empty, Honcho falls back to `LLM_OPENAI_COMPATIBLE_*` (backup provider). This is intentional and works well when your backup supports embeddings (e.g. Venice with `text-embedding-bge-m3`). Set the embedding env vars explicitly if you want embeddings routed separately.
 - **One backup per component** — Honcho supports primary + one backup provider, not a full failover chain. Using a multi-provider router (e.g. OpenRouter) as primary mitigates this.
 - **No E2EE** — Honcho's agents use function calling, which isn't compatible with end-to-end encryption. LLM request content is visible to the provider, but your stored data (sessions, observations, embeddings) stays on your machine.
 
